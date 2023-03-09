@@ -5,8 +5,8 @@ const ReactFormDataSchema = new mongoose.Schema({
     type: String,
     require: true,
   },
-  favourite: {
-    type: String,
+  Favourite: {
+    type: [String],
     required: true,
   },
 });

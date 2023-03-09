@@ -42,4 +42,8 @@ app.post("/insert", async (req, res) => {
   }
 });
 
+app.get("/fetch", async (req, res) => {
+  console.log("data");
+});
+
 module.exports = app;
