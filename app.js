@@ -27,11 +27,16 @@ app.get("/", (req, res) =>
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true });
 
 app.post("/insert", async (req, res) => {
-  const user = req.body.user;
-  const favourite = req.body.favourite;
+  const email = req.body.user;
+  const favourite = req.body.Favourite;
+
+  //   db.?.updateOne(
+  //     { user: email },
+  //     { $push: { favourite: favourite } }
+  //  )
 
   const formData = new User({
-    user: user,
+    user: email,
     favourite: favourite,
   });
   try {
@@ -43,7 +48,13 @@ app.post("/insert", async (req, res) => {
 });
 
 app.get("/fetch", async (req, res) => {
-  console.log("data");
+  try {
+    console.log(res);
+    //res.send(data);
+  } catch (err) {
+    console.log(err);
+  }
+  //console.log("data");
 });
 
 module.exports = app;
