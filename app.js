@@ -30,31 +30,49 @@ app.post("/insert", async (req, res) => {
   const email = req.body.user;
   const favourite = req.body.Favourite;
 
-  //   db.?.updateOne(
-  //     { user: email },
-  //     { $push: { favourite: favourite } }
-  //  )
-
-  const formData = new User({
-    user: email,
-    favourite: favourite,
-  });
   try {
-    await formData.save();
-    res.send("saved to favourites!");
-  } catch (err) {
-    console.log(err);
+    const userData = await User.find({
+      user: email,
+    });
+    if (userData.length === 0) {
+      const formData = new User({
+        user: email,
+        favourite: favourite,
+      });
+      await formData.save();
+      res.sendStatus(201);
+    } else {
+      await User.findOneAndUpdate(
+        {
+          user: email,
+        },
+        {
+          favourite: favourite,
+        }
+      );
+      res.sendStatus(201);
+    }
+  } catch {
+    res.sendStatus(500);
   }
 });
 
-app.get("/fetch", async (req, res) => {
+app.get("/fetch/:email", async (req, res) => {
+  const email = req.params.email;
   try {
-    console.log(res);
-    //res.send(data);
+    const userData = await User.find({
+      user: email,
+    });
+    if (userData.length === 0) {
+      res.sendStatus(404);
+    } else {
+      res.status(200).send({
+        userData,
+      });
+    }
   } catch (err) {
-    console.log(err);
+    res.sendStatus(500);
   }
-  //console.log("data");
 });
 
 module.exports = app;
