@@ -27,18 +27,51 @@ app.get("/", (req, res) =>
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true });
 
 app.post("/insert", async (req, res) => {
-  const user = req.body.user;
-  const favourite = req.body.favourite;
+  const email = req.body.user;
+  const favourite = req.body.Favourite;
 
-  const formData = new User({
-    user: user,
-    favourite: favourite,
-  });
   try {
-    await formData.save();
-    res.send("saved to favourites!");
+    const userData = await User.find({
+      user: email,
+    });
+    if (userData.length === 0) {
+      const formData = new User({
+        user: email,
+        favourite: favourite,
+      });
+      await formData.save();
+      res.sendStatus(201);
+    } else {
+      await User.findOneAndUpdate(
+        {
+          user: email,
+        },
+        {
+          favourite: favourite,
+        }
+      );
+      res.sendStatus(201);
+    }
+  } catch {
+    res.sendStatus(500);
+  }
+});
+
+app.get("/fetch/:email", async (req, res) => {
+  const email = req.params.email;
+  try {
+    const userData = await User.find({
+      user: email,
+    });
+    if (userData.length === 0) {
+      res.sendStatus(404);
+    } else {
+      res.status(200).send({
+        userData,
+      });
+    }
   } catch (err) {
-    console.log(err);
+    res.sendStatus(500);
   }
 });
 
