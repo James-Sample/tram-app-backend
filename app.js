@@ -24,6 +24,25 @@ app.get("/", (req, res) =>
     .catch((err) => res.status(500).json(err))
 );
 
+app.get("/login/:token", (req, res) => {
+  const token = req.params.token;
+  try {
+    axios
+      .get(
+        `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${token}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        }
+      )
+      .then((payload) => res.status(200).send(payload.data));
+  } catch {
+    res.sendStatus(500);
+  }
+});
+
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true });
 
 app.post("/insert", async (req, res) => {
