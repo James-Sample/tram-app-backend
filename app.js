@@ -8,7 +8,8 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 // const { OAuth2Client } = require("google-auth-library");
-// const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
+const jwtSecret = process.env.jwtSecret;
 
 const MY_KEY = process.env.REACT_APP_API_KEY;
 
@@ -37,7 +38,14 @@ app.get("/login/:token", (req, res) => {
           },
         }
       )
-      .then((payload) => res.status(200).send(payload.data));
+      .then((payload) => {
+        const webToken = jwt.sign(token, jwtSecret);
+        const info = payload.data;
+        res
+          .status(200)
+          .cookie("userToken", webToken, { maxAge: 1000 * 60 * 60 * 24 })
+          .send({ info, webToken });
+      });
   } catch {
     res.sendStatus(500);
   }
