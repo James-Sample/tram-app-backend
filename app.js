@@ -1,105 +1,24 @@
 const express = require("express");
 const cors = require("cors");
-const axios = require("axios");
 const mongoose = require("mongoose");
-const User = require("./Models/dataSchema.js");
 require("dotenv").config();
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+// controller functions
+const userLogin = require("./controllers/userLogin.js");
+const tramTimes = require("./controllers/tramTimes.js");
+const fetchFave = require("./controllers/fetchFave.js");
+const insertFave = require("./controllers/insertFave.js");
 // const { OAuth2Client } = require("google-auth-library");
-const jwt = require("jsonwebtoken");
-const jwtSecret = process.env.jwtSecret;
 
-const MY_KEY = process.env.REACT_APP_API_KEY;
-
-app.get("/", (req, res) =>
-  axios({
-    method: "get",
-    url: `https://api.tfgm.com/odata/Metrolinks?$filter=StationLocation%20eq%20\'${req.query.station}\'`,
-    headers: {
-      "Ocp-Apim-Subscription-Key": MY_KEY,
-    },
-  })
-    .then((payload) => res.status(200).json(payload.data.value))
-    .catch((err) => res.status(500).json(err))
-);
-
-app.get("/login/:token", (req, res) => {
-  const token = req.params.token;
-  try {
-    axios
-      .get(
-        `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${token}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-        }
-      )
-      .then((payload) => {
-        const webToken = jwt.sign(token, jwtSecret);
-        const info = payload.data;
-        res
-          .status(200)
-          .cookie("userToken", webToken, { maxAge: 1000 * 60 * 60 * 24 })
-          .send({ info, webToken });
-      });
-  } catch {
-    res.sendStatus(500);
-  }
-});
+// request paths
+app.get("/", tramTimes);
+app.get("/login/:token", userLogin);
+app.post("/insert", insertFave);
+app.get("/fetch/:email", fetchFave);
 
 mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true });
-
-app.post("/insert", async (req, res) => {
-  const email = req.body.user;
-  const favourite = req.body.Favourite;
-
-  try {
-    const userData = await User.find({
-      user: email,
-    });
-    if (userData.length === 0) {
-      const formData = new User({
-        user: email,
-        favourite: favourite,
-      });
-      await formData.save();
-      res.sendStatus(201);
-    } else {
-      await User.findOneAndUpdate(
-        {
-          user: email,
-        },
-        {
-          favourite: favourite,
-        }
-      );
-      res.sendStatus(201);
-    }
-  } catch {
-    res.sendStatus(500);
-  }
-});
-
-app.get("/fetch/:email", async (req, res) => {
-  const email = req.params.email;
-  try {
-    const userData = await User.find({
-      user: email,
-    });
-    if (userData.length === 0) {
-      res.sendStatus(404);
-    } else {
-      res.status(200).send({
-        userData,
-      });
-    }
-  } catch (err) {
-    res.sendStatus(500);
-  }
-});
 
 module.exports = app;
